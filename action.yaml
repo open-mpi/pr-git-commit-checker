@@ -1,0 +1,44 @@
+name: Pull Request Git Commit Checker
+description: Checks pull request commits for policy conformity
+branding:
+  icon: check-square
+  color: green
+inputs:
+  token:
+    description: "The GITHUB_TOKEN secret"
+    required: true
+  cherry-pick-required:
+    description: "Whether the cherry-pick message is required"
+    required: false
+    default: false
+  permit-empty:
+    description: "Allow empty commit messages"
+    required: false
+    default: false
+
+runs:
+  using: "composite"
+  steps:
+  - name: Check out the code
+    uses: actions/checkout@v2
+    with:
+      # Get all branches and history
+      fetch-depth: 0
+
+  - name: Setup Python
+    uses: actions/setup-python@v2
+    with:
+      python-version: '3.x'
+
+  - name: Get the GitPython and PyGithub modules
+    run: pip install gitpython PyGithub
+    shell: bash
+
+  - name: Check all git commits
+    run: ${{ github.action_path }}/git-commit-checks.py
+    shell: bash
+    env:
+      GITHUB_TOKEN: ${{ inputs.token }}
+      CHERRY_PICK_REQUIRED: ${{ inputs.cherry-pick-required }}
+      PERMIT_EMPTY: ${{ inputs.permit-empty }}
+      PR_NUM: ${{ github.event.number }}
